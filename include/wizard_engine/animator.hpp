@@ -34,8 +34,7 @@ namespace wze {
  */
 class animator final {
   private:
-    std::vector<std::shared_ptr<texture>> _frames;
-    uint16_t _frame_time;
+    std::vector<std::pair<std::shared_ptr<texture>, uint16_t>> _frames;
     size_t _current_frame;
     uint16_t _remaining_time;
     std::vector<std::weak_ptr<animatable>> _targets;
@@ -48,23 +47,8 @@ class animator final {
      * @brief Returns the frame pool of the animation.
      * @return Frame pool of the animation.
      */
-    std::vector<std::shared_ptr<texture>> const& frames() const;
-
-    /**
-     * @file animator.hpp
-     * @author Zana Domán
-     * @brief Returns the frame time of the animation in milliseconds.
-     * @return Frame time of the animation in milliseconds.
-     */
-    uint16_t frame_time() const;
-
-    /**
-     * @file animator.hpp
-     * @author Zana Domán
-     * @brief Sets the frame time of the animation in milliseconds.
-     * @param frame_time Frame time of the animation in milliseconds.
-     */
-    void set_frame_time(uint16_t frame_time);
+    std::vector<std::pair<std::shared_ptr<texture>, uint16_t>> const&
+    frames() const;
 
     /**
      * @file animator.hpp
@@ -114,8 +98,8 @@ class animator final {
      * @param frame_time Frame time of the animation in milliseconds.
      * @param targets Targets of the animation.
      */
-    animator(std::vector<std::shared_ptr<texture>> const& frames = {},
-             uint16_t frame_time = 100,
+    animator(std::vector<std::pair<std::shared_ptr<texture>, uint16_t>> const&
+                 frames = {},
              std::vector<std::weak_ptr<animatable>> const& targets = {});
 
     /**

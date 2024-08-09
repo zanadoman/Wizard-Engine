@@ -24,17 +24,9 @@
 #include <wizard_engine/animator.hpp>
 #include <wizard_engine/timer.hpp>
 
-std::vector<std::shared_ptr<wze::texture>> const&
+std::vector<std::pair<std::shared_ptr<wze::texture>, uint16_t>> const&
 wze::animator::frames() const {
     return _frames;
-}
-
-uint16_t wze::animator::frame_time() const {
-    return _frame_time;
-}
-
-void wze::animator::set_frame_time(uint16_t frame_time) {
-    _frame_time = frame_time;
 }
 
 size_t wze::animator::current_frame() const {
@@ -58,11 +50,10 @@ bool wze::animator::reversed() const {
     return _reversed;
 }
 
-wze::animator::animator(std::vector<std::shared_ptr<texture>> const& frames,
-                        uint16_t frame_time,
-                        std::vector<std::weak_ptr<animatable>> const& targets) {
+wze::animator::animator(
+    std::vector<std::pair<std::shared_ptr<texture>, uint16_t>> const& frames,
+    std::vector<std::weak_ptr<animatable>> const& targets) {
     _frames = frames;
-    set_frame_time(frame_time);
     set_current_frame(0);
     _remaining_time = 0;
     this->targets() = targets;
@@ -75,13 +66,19 @@ bool wze::animator::play() {
     std::vector<std::weak_ptr<animatable>>::iterator iterator;
     std::shared_ptr<animatable> instance;
 
-    if (!frames().size() || !frame_time()) {
+    if (!frames().size()) {
         return false;
     }
 
-    elapsed_time = timer::delta_time() + _remaining_time;
-    set_current_frame(current_frame() + elapsed_time / frame_time());
-    _remaining_time = elapsed_time % frame_time();
+    if (frames().at(current_frame()).second) {
+        elapsed_time = timer::delta_time() + _remaining_time;
+        set_current_frame(current_frame() +
+                          elapsed_time / frames().at(current_frame()).second);
+        _remaining_time = elapsed_time % frames().at(current_frame()).second;
+    } else {
+        set_current_frame(current_frame() + 1);
+        _remaining_time = 0;
+    }
 
     if ((looped = frames().size() <= current_frame())) {
         set_current_frame(current_frame() % frames().size());
@@ -91,7 +88,7 @@ bool wze::animator::play() {
          ++iterator) {
         if ((instance = iterator->lock())) {
             if (instance->animated()) {
-                instance->set_texture(frames().at(current_frame()));
+                instance->set_texture(frames().at(current_frame()).first);
             }
         } else {
             targets().erase(iterator--);
